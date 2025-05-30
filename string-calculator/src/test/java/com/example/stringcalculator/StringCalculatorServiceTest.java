@@ -122,6 +122,24 @@ public class StringCalculatorServiceTest {
         assertNegativeNumbersException("2,-4, -9", "Negative number(s) not allowed: -4, -9");
     }
 
+    @Test
+    void testAddMultipleErrorsReturnsCombinedErrorMessage() {
+        Exception exception = assertThrows(CalculatorException.class, () -> calculatorService.add("1,\n2,-3"));
+        assertTrue(exception.getMessage().contains("Invalid number: empty number between separators\nNegative number(s) not allowed: -3"));
+    }
+
+    @Test
+    void testAddMultipleTypeErrorsReturnsCombinedErrorMessage() {
+        Exception exception = assertThrows(CalculatorException.class, () -> calculatorService.add("//|\n1|2,-3"));
+        assertTrue(exception.getMessage().contains("Invalid input: '|' expected but ',' found at position 3.\nNegative number(s) not allowed: -3"));
+    }
+
+    @Test
+    void testAddIgnoresNumbersGreaterThan1000() throws CalculatorException {
+        assertEquals(2, calculatorService.add("2,1001"));
+        assertEquals(1002, calculatorService.add("2,1000"));
+    }
+
     private void assertDelimiterException(String input) {
         assertDelimiterException(input, "Custom delimiter cannot contain default delimiters: ',' or '\\n'");
     }
@@ -138,16 +156,5 @@ public class StringCalculatorServiceTest {
         assertTrue(exception.getMessage().contains(expectedMessage));
     }
 
-    @Test
-    void testAddMultipleErrorsReturnsCombinedErrorMessage() {
-        Exception exception = assertThrows(CalculatorException.class, () -> calculatorService.add("1,\n2,-3"));
-        assertTrue(exception.getMessage().contains("Invalid number: empty number between separators\nNegative number(s) not allowed: -3"));
-    }
-
-    @Test
-    void testAddMultipleTypeErrorsReturnsCombinedErrorMessage() {
-        Exception exception = assertThrows(CalculatorException.class, () -> calculatorService.add("//|\n1|2,-3"));
-        assertTrue(exception.getMessage().contains("Invalid input: '|' expected but ',' found at position 3.\nNegative number(s) not allowed: -3"));
-    }
 
 }

@@ -81,7 +81,7 @@ public class StringCalculatorService {
                             int number = Integer.parseInt(value);
                             if (number < 0) {
                                 negatives.add(number);
-                            } else {
+                            } else if (number <= 1000) {
                                 numbers.add(number);
                             }
                         } catch (NumberFormatException e) {
