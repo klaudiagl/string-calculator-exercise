@@ -29,6 +29,8 @@ public class StringCalculatorService {
             String custom = input.substring(2, delimiterEndIndex);
             if (custom.isEmpty()) {
                 throw new DelimiterException("Invalid input: empty delimiter.");
+            } else if(custom.contains(",") || custom.contains("\\n")){
+                throw new DelimiterException("Custom delimiter cannot contain default delimiters: ',' or '\\n'");
             }
             numbersPart = input.substring(delimiterEndIndex + 1);
             delimiterRegex = Pattern.quote(custom);

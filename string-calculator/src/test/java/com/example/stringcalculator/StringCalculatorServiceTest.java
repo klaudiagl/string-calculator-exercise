@@ -100,6 +100,25 @@ public class StringCalculatorServiceTest {
         assertDelimiterException("//|\n1|2,3", "Invalid input: '|' expected but ',' found at position 3.");
     }
 
+    @Test
+    void testAddWithCustomDelimiterContainsCommaThrowsException() {
+        assertDelimiterException("//,\n1,2");
+    }
+
+    @Test
+    void testAddWithCustomDelimiterContainsNewlineThrowsException() {
+        assertDelimiterException("//\\n\n1,2\n3");
+    }
+
+    @Test
+    void testAddWithCustomDelimiterIncludesDefaultSeparatorsThrowsException() {
+        assertDelimiterException("//sep,\n1sep,2");
+    }
+
+    private void assertDelimiterException(String input) {
+        assertDelimiterException(input, "Custom delimiter cannot contain default delimiters: ',' or '\\n'");
+    }
+
     private void assertDelimiterException(String input, String expectedMessage) {
         Exception exception = assertThrows(CalculatorException.class, () -> calculatorService.add(input));
         assertTrue(exception instanceof DelimiterException);
