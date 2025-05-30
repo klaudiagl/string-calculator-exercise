@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class StringCalculatorService {
@@ -44,8 +45,10 @@ public class StringCalculatorService {
             return 0;
         }
 
+        List<CalculatorException> errors = new ArrayList<>();
+
         if (numbersPart.matches(".*" + delimiterRegex + "$")) {
-            throw new DelimiterException("Invalid input: cannot end with a separator");
+            errors.add(new DelimiterException("Invalid input: cannot end with a separator"));
         }
 
         if (customDelimiterUsed) {
@@ -66,25 +69,42 @@ public class StringCalculatorService {
                 .map(String::trim)
                 .forEach(value -> {
                     if (value.isEmpty()) {
-                        throw new RuntimeException(new NumberExpectedException("Invalid number: empty number between separators"));
-                    }
-                    try {
-                        int number = Integer.parseInt(value);
-                        if (number < 0) {
-                            negatives.add(number);
-                        } else {
-                            numbers.add(number);
+                        errors.add(new NumberExpectedException("Invalid number: empty number between separators"));
+                    }else{
+                        try {
+                            int number = Integer.parseInt(value);
+                            if (number < 0) {
+                                negatives.add(number);
+                            } else {
+                                numbers.add(number);
+                            }
+                        } catch (NumberFormatException e) {
+                            errors.add(new NumberExpectedException("Invalid number: " + value));
                         }
-                    } catch (NumberFormatException e) {
-                        throw new RuntimeException(new NumberExpectedException("Invalid number: " + value));
                     }
                 });
 
         if (!negatives.isEmpty()) {
-            throw new NegativeNumbersException(negatives);
+            errors.add(new NegativeNumbersException(negatives));
         }
+
+        throwErrors(errors);
 
         return numbers.stream().mapToInt(Integer::intValue).sum();
     }
+
+    private void throwErrors(List<CalculatorException> errors) throws CalculatorException {
+        if (!errors.isEmpty()) {
+            if (errors.size() == 1) {
+                throw errors.get(0);
+            } else {
+                String combined = errors.stream()
+                        .map(Throwable::getMessage)
+                        .collect(Collectors.joining("\n"));
+                throw new CalculatorException(combined);
+            }
+        }
+    }
+
 
 }

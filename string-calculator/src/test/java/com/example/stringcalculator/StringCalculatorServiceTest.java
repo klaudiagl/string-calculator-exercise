@@ -138,4 +138,10 @@ public class StringCalculatorServiceTest {
         assertTrue(exception.getMessage().contains(expectedMessage));
     }
 
+    @Test
+    void testAddMultipleErrorsReturnsCombinedErrorMessage() {
+        Exception exception = assertThrows(CalculatorException.class, () -> calculatorService.add("1,\n2,-3"));
+        assertTrue(exception.getMessage().contains("Invalid number: empty number between separators\nNegative number(s) not allowed: -3"));
+    }
+
 }
