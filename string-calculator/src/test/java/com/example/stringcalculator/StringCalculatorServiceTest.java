@@ -33,7 +33,6 @@ public class StringCalculatorServiceTest {
     @Test
     void testAddTwoNumbersReturnsTheirSum() throws CalculatorException {
         assertEquals(3, calculatorService.add("1,2"));
-
     }
 
     @Test
@@ -75,6 +74,17 @@ public class StringCalculatorServiceTest {
         Exception exception = assertThrows(CalculatorException.class, () -> calculatorService.add("1,2,"));
         assertTrue(exception instanceof DelimiterException);
         assertTrue(exception.getMessage().contains("Invalid input: cannot end with a separator"));
+    }
+
+    @Test
+    void testAddWithCustomSingleCharacterDelimiterReturnsSum() throws CalculatorException {
+        assertEquals(4, calculatorService.add("//;\n1;3"));
+        assertEquals(6, calculatorService.add("//|\n1|2|3"));
+    }
+
+    @Test
+    void testAddWithCustomMultiCharacterDelimiterReturnsSum() throws CalculatorException {
+        assertEquals(7, calculatorService.add("//sep\n2sep5"));
     }
 
 
