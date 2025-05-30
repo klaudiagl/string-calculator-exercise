@@ -51,5 +51,22 @@ public class StringCalculatorServiceTest {
         }
     }
 
+    @Test
+    void testAddWithNewlinesAsSeparators() {
+        assertEquals(6, calculatorService.add("1,2\n3"));
+    }
+
+    @Test
+    void testAddSeparatorCommaFollowedByNewlineThrowsException() {
+        Exception exception = assertThrows(Exception.class, () -> calculatorService.add("1,2,\n3"));
+
+        if (exception instanceof NumberExpectedException) {
+            assertTrue(exception.getMessage().contains("Invalid number: empty number between separators"));
+        } else if (exception instanceof RuntimeException) {
+            assertTrue(exception.getCause() instanceof NumberExpectedException);
+            assertTrue(exception.getCause().getMessage().contains("Invalid number: empty number between separators"));
+        }
+    }
+
 
 }

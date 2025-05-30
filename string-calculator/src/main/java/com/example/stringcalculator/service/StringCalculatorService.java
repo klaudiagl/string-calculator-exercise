@@ -13,10 +13,15 @@ public class StringCalculatorService {
             return 0;
         }
 
-        return Arrays.stream(input.split(","))
+        // default delimiters
+        String delimiterRegex = "[,\n]";
+
+        return Arrays.stream(input.split(delimiterRegex))
                 .map(String::trim)
-                .filter(string -> !string.isEmpty())
                 .mapToInt(value -> {
+                    if (value.isEmpty()) {
+                        throw new RuntimeException(new NumberExpectedException("Invalid number: empty number between separators"));
+                    }
                     try {
                         return Integer.parseInt(value);
                     } catch (NumberFormatException e) {
