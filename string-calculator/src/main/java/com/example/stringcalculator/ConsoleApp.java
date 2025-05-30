@@ -22,12 +22,14 @@ public class ConsoleApp implements CommandLineRunner {
     @Override
     public void run(String... args) {
         Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Enter 'exit' to quit");
         System.out.println("Enter numbers to add:");
 
         while (true) {
             String input = scanner.nextLine();
 
-            if (input.isEmpty()) {
+            if ("exit".equalsIgnoreCase(input.trim())) {
                 System.out.println("Exiting...");
                 break;
             }
@@ -42,4 +44,6 @@ public class ConsoleApp implements CommandLineRunner {
         }
 
     }
+
+
 }
