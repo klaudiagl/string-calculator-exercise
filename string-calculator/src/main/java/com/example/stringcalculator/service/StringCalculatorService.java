@@ -54,12 +54,18 @@ public class StringCalculatorService {
         if (customDelimiterUsed) {
             Pattern invalidSeparatorPattern = Pattern.compile("[,\n]");
             Matcher matcher = invalidSeparatorPattern.matcher(numbersPart);
-            if (matcher.find()) {
+            StringBuilder delimiterRegexBuilder = new StringBuilder(delimiterRegex);
+            while (matcher.find()) {
                 int pos = matcher.start();
                 char found = matcher.group().charAt(0);
-                throw new DelimiterException("Invalid input: '" + delimiterRegex.replace("\\Q", "").replace("\\E", "") +
-                        "' expected but '" + found + "' found at position " + pos + ".");
+                String rawDelimiter = delimiterRegexBuilder.toString().replace("\\Q", "").replace("\\E", "");
+                errors.add(new DelimiterException("Invalid input: '" + rawDelimiter + "' expected but '" + found +
+                        "' found at position " + pos + "."));
+                // Adding found delimiter to regex, allowing further validation of entered numbers
+                // and throwing number format exceptions
+                delimiterRegexBuilder.append("|").append(Pattern.quote(String.valueOf(found)));
             }
+            delimiterRegex = delimiterRegexBuilder.toString();
         }
 
         List<Integer> numbers = new ArrayList<>();
@@ -70,7 +76,7 @@ public class StringCalculatorService {
                 .forEach(value -> {
                     if (value.isEmpty()) {
                         errors.add(new NumberExpectedException("Invalid number: empty number between separators"));
-                    }else{
+                    } else {
                         try {
                             int number = Integer.parseInt(value);
                             if (number < 0) {

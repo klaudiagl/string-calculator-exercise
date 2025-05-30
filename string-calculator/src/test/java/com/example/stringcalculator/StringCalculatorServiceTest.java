@@ -144,4 +144,10 @@ public class StringCalculatorServiceTest {
         assertTrue(exception.getMessage().contains("Invalid number: empty number between separators\nNegative number(s) not allowed: -3"));
     }
 
+    @Test
+    void testAddMultipleTypeErrorsReturnsCombinedErrorMessage() {
+        Exception exception = assertThrows(CalculatorException.class, () -> calculatorService.add("//|\n1|2,-3"));
+        assertTrue(exception.getMessage().contains("Invalid input: '|' expected but ',' found at position 3.\nNegative number(s) not allowed: -3"));
+    }
+
 }
