@@ -6,6 +6,7 @@ import com.example.stringcalculator.exceptions.NumberExpectedException;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
@@ -18,6 +19,7 @@ public class StringCalculatorService {
 
         String delimiterRegex = "[,\n]"; // default delimiters
         String numbersPart = input;
+        boolean customDelimiterUsed = false;
 
         if (input.startsWith("//")) {
             int delimiterEndIndex = input.indexOf('\n');
@@ -30,6 +32,7 @@ public class StringCalculatorService {
             }
             numbersPart = input.substring(delimiterEndIndex + 1);
             delimiterRegex = Pattern.quote(custom);
+            customDelimiterUsed = true;
         }
 
         if (numbersPart.isEmpty()) {
@@ -38,6 +41,17 @@ public class StringCalculatorService {
 
         if (numbersPart.matches(".*" + delimiterRegex + "$")) {
             throw new DelimiterException("Invalid input: cannot end with a separator");
+        }
+
+        if (customDelimiterUsed) {
+            Pattern invalidSeparatorPattern = Pattern.compile("[,\n]");
+            Matcher matcher = invalidSeparatorPattern.matcher(numbersPart);
+            if (matcher.find()) {
+                int pos = matcher.start();
+                char found = matcher.group().charAt(0);
+                throw new DelimiterException("Invalid input: '" + delimiterRegex.replace("\\Q", "").replace("\\E", "") +
+                        "' expected but '" + found + "' found at position " + pos + ".");
+            }
         }
 
         return Arrays.stream(numbersPart.split(delimiterRegex))

@@ -71,9 +71,7 @@ public class StringCalculatorServiceTest {
 
     @Test
     void testAddInputEndsWithSeparatorThrowsException() {
-        Exception exception = assertThrows(CalculatorException.class, () -> calculatorService.add("1,2,"));
-        assertTrue(exception instanceof DelimiterException);
-        assertTrue(exception.getMessage().contains("Invalid input: cannot end with a separator"));
+        assertDelimiterException("1,2,", "Invalid input: cannot end with a separator");
     }
 
     @Test
@@ -87,5 +85,24 @@ public class StringCalculatorServiceTest {
         assertEquals(7, calculatorService.add("//sep\n2sep5"));
     }
 
+    @Test
+    void testAddWithEmptyDelimitersThrowsException() {
+        assertDelimiterException("//\n2,3", "Invalid input: empty delimiter.");
+    }
 
+    @Test
+    void testAddDelimiterMissingNewlineThrowsException() {
+        assertDelimiterException("//sep2sep3", "Invalid input: missing newline after delimiter declaration.");
+    }
+
+    @Test
+    void testAddWithMixedDelimitersThrowsException() {
+        assertDelimiterException("//|\n1|2,3", "Invalid input: '|' expected but ',' found at position 3.");
+    }
+
+    private void assertDelimiterException(String input, String expectedMessage) {
+        Exception exception = assertThrows(CalculatorException.class, () -> calculatorService.add(input));
+        assertTrue(exception instanceof DelimiterException);
+        assertTrue(exception.getMessage().contains(expectedMessage));
+    }
 }
