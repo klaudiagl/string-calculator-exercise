@@ -4,9 +4,15 @@ import com.example.stringcalculator.exceptions.CalculatorException;
 import com.example.stringcalculator.exceptions.DelimiterException;
 import com.example.stringcalculator.exceptions.NegativeNumbersException;
 import com.example.stringcalculator.exceptions.NumberExpectedException;
+import com.example.stringcalculator.parser.DelimiterParser;
+import com.example.stringcalculator.parser.NumerParser;
 import com.example.stringcalculator.service.StringCalculatorService;
+import com.example.stringcalculator.validators.CustomDelimiterValidator;
+import com.example.stringcalculator.validators.EndsWithDelimiterValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,7 +23,10 @@ public class StringCalculatorServiceTest {
 
     @BeforeEach
     void setup() {
-        calculatorService = new StringCalculatorService();
+        calculatorService = new StringCalculatorService(
+                new DelimiterParser(),
+                new NumerParser(),
+                Arrays.asList(new CustomDelimiterValidator(), new EndsWithDelimiterValidator()));
     }
 
     @Test

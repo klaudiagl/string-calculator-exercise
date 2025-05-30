@@ -1,102 +1,66 @@
 package com.example.stringcalculator.service;
 
 import com.example.stringcalculator.exceptions.CalculatorException;
-import com.example.stringcalculator.exceptions.DelimiterException;
-import com.example.stringcalculator.exceptions.NegativeNumbersException;
-import com.example.stringcalculator.exceptions.NumberExpectedException;
+import com.example.stringcalculator.parser.DelimiterParser;
+import com.example.stringcalculator.parser.NumerParser;
+import com.example.stringcalculator.validators.CustomDelimiterValidator;
+import com.example.stringcalculator.validators.InputValidator;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
 public class StringCalculatorService {
+
+    private final DelimiterParser delimiterParser;
+    private final NumerParser numberParser;
+    private final List<InputValidator> validators;
+
+    public StringCalculatorService(DelimiterParser delimiterParser, NumerParser numberParser, List<InputValidator> validators) {
+        this.delimiterParser = delimiterParser;
+        this.numberParser = numberParser;
+        this.validators = validators;
+    }
 
     public int add(String input) throws CalculatorException {
         if (input == null || input.isEmpty()) {
             return 0;
         }
 
-        String delimiterRegex = "[,\n]"; // default delimiters
-        String numbersPart = input;
-        boolean customDelimiterUsed = false;
+        List<CalculatorException> errors = new ArrayList<>();
 
-        if (input.startsWith("//")) {
-            int delimiterEndIndex = input.indexOf('\n');
-            if (delimiterEndIndex == -1)
-                throw new DelimiterException("Invalid input: missing newline after delimiter declaration.");
-
-            String custom = input.substring(2, delimiterEndIndex);
-            if (custom.isEmpty()) {
-                throw new DelimiterException("Invalid input: empty delimiter.");
-            } else if (custom.contains(",") || custom.contains("\\n")) {
-                throw new DelimiterException("Custom delimiter cannot contain default delimiters: ',' or '\\n'");
-            }
-            numbersPart = input.substring(delimiterEndIndex + 1);
-            delimiterRegex = Pattern.quote(custom);
-            customDelimiterUsed = true;
-        }
+        DelimiterParser.DelimiterParseResult parseResult = delimiterParser.parse(input);
+        String delimiterRegex = parseResult.delimiterRegex();
+        String numbersPart = parseResult.numbersPart();
 
         if (numbersPart.isEmpty()) {
             return 0;
         }
 
-        List<CalculatorException> errors = new ArrayList<>();
-
-        if (numbersPart.matches(".*" + delimiterRegex + "$")) {
-            errors.add(new DelimiterException("Invalid input: cannot end with a separator"));
-        }
-
-        if (customDelimiterUsed) {
-            Pattern invalidSeparatorPattern = Pattern.compile("[,\n]");
-            Matcher matcher = invalidSeparatorPattern.matcher(numbersPart);
-            StringBuilder delimiterRegexBuilder = new StringBuilder(delimiterRegex);
-            while (matcher.find()) {
-                int pos = matcher.start();
-                char found = matcher.group().charAt(0);
-                String rawDelimiter = delimiterRegexBuilder.toString().replace("\\Q", "").replace("\\E", "");
-                errors.add(new DelimiterException("Invalid input: '" + rawDelimiter + "' expected but '" + found +
-                        "' found at position " + pos + "."));
-                // Adding found delimiter to regex, allowing further validation of entered numbers
-                // and throwing number format exceptions
-                delimiterRegexBuilder.append("|").append(Pattern.quote(String.valueOf(found)));
-            }
-            delimiterRegex = delimiterRegexBuilder.toString();
-        }
-
-        List<Integer> numbers = new ArrayList<>();
-        List<Integer> negatives = new ArrayList<>();
-
-        Arrays.stream(numbersPart.split(delimiterRegex))
-                .map(String::trim)
-                .forEach(value -> {
-                    if (value.isEmpty()) {
-                        errors.add(new NumberExpectedException("Invalid number: empty number between separators"));
-                    } else {
-                        try {
-                            int number = Integer.parseInt(value);
-                            if (number < 0) {
-                                negatives.add(number);
-                            } else if (number <= 1000) {
-                                numbers.add(number);
-                            }
-                        } catch (NumberFormatException e) {
-                            errors.add(new NumberExpectedException("Invalid number: " + value));
-                        }
+        for (InputValidator validator : validators) {
+            if (validator instanceof CustomDelimiterValidator) {
+                if (parseResult.customDelimiterUsed()) {
+                    List<CalculatorException> exceptionList = validator.validate(numbersPart, delimiterRegex);
+                    // the presence of an error means that default separators were found during validation
+                    // adding default separators to regex allows further validation of entered numbers
+                    if (!exceptionList.isEmpty()) {
+                        delimiterRegex = delimiterRegex + "|,|\n";
                     }
-                });
-
-        if (!negatives.isEmpty()) {
-            errors.add(new NegativeNumbersException(negatives));
+                    errors.addAll(exceptionList);
+                }
+            } else {
+                errors.addAll(validator.validate(numbersPart, delimiterRegex));
+            }
         }
+
+        NumerParser.NumberParseResult numberParseResult = numberParser.parse(numbersPart, delimiterRegex);
+        errors.addAll(numberParseResult.errors());
 
         throwErrors(errors);
 
-        return numbers.stream().mapToInt(Integer::intValue).sum();
+        return numberParseResult.numbers().stream().mapToInt(Integer::intValue).sum();
     }
 
     private void throwErrors(List<CalculatorException> errors) throws CalculatorException {
