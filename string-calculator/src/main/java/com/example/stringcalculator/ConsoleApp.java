@@ -22,9 +22,10 @@ public class ConsoleApp implements CommandLineRunner {
     @Override
     public void run(String... args) {
         Scanner scanner = new Scanner(System.in);
+        StringBuilder inputBuilder = new StringBuilder();
 
         System.out.println("Enter 'exit' to quit");
-        System.out.println("Enter numbers to add:");
+        System.out.println("Enter numbers to add (enter on an empty line to finish):");
 
         while (true) {
             String input = scanner.nextLine();
@@ -34,15 +35,25 @@ public class ConsoleApp implements CommandLineRunner {
                 break;
             }
 
-            try {
-                int result = calculatorService.add(input);
-                System.out.println("Result: " + result);
-            } catch (CalculatorException e) {
-                System.out.println(e.getMessage());
+            if (input.trim().isEmpty()) {
+                int length = inputBuilder.length();
+                if (length > 0 && inputBuilder.charAt(length - 1) == '\n') {
+                    inputBuilder.deleteCharAt(length - 1);
+                }
+                try {
+                    int result = calculatorService.add(inputBuilder.toString());
+                    System.out.println("Result: " + result);
+                } catch (CalculatorException e) {
+                    System.out.println(e.getMessage());
+                } finally {
+                    inputBuilder.setLength(0);
+                    System.out.println("Enter numbers to add (enter on an empty line to finish):");
+                }
+            } else {
+                inputBuilder.append(input).append("\n");
             }
-            System.out.println("Enter numbers to add:");
         }
-
+        scanner.close();
     }
 
 
