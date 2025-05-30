@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/string-calculator/string-calculator.iml" filepath="$PROJECT_DIR$/string-calculator/string-calculator.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/string-calculator-exercise.iml" filepath="$PROJECT_DIR$/.idea/string-calculator-exercise.iml" />
     </modules>
   </component>
