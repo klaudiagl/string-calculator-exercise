@@ -2,10 +2,13 @@ package com.example.stringcalculator.service;
 
 import com.example.stringcalculator.exceptions.CalculatorException;
 import com.example.stringcalculator.exceptions.DelimiterException;
+import com.example.stringcalculator.exceptions.NegativeNumbersException;
 import com.example.stringcalculator.exceptions.NumberExpectedException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,7 +32,7 @@ public class StringCalculatorService {
             String custom = input.substring(2, delimiterEndIndex);
             if (custom.isEmpty()) {
                 throw new DelimiterException("Invalid input: empty delimiter.");
-            } else if(custom.contains(",") || custom.contains("\\n")){
+            } else if (custom.contains(",") || custom.contains("\\n")) {
                 throw new DelimiterException("Custom delimiter cannot contain default delimiters: ',' or '\\n'");
             }
             numbersPart = input.substring(delimiterEndIndex + 1);
@@ -56,18 +59,32 @@ public class StringCalculatorService {
             }
         }
 
-        return Arrays.stream(numbersPart.split(delimiterRegex))
+        List<Integer> numbers = new ArrayList<>();
+        List<Integer> negatives = new ArrayList<>();
+
+        Arrays.stream(numbersPart.split(delimiterRegex))
                 .map(String::trim)
-                .mapToInt(value -> {
+                .forEach(value -> {
                     if (value.isEmpty()) {
                         throw new RuntimeException(new NumberExpectedException("Invalid number: empty number between separators"));
                     }
                     try {
-                        return Integer.parseInt(value);
+                        int number = Integer.parseInt(value);
+                        if (number < 0) {
+                            negatives.add(number);
+                        } else {
+                            numbers.add(number);
+                        }
                     } catch (NumberFormatException e) {
                         throw new RuntimeException(new NumberExpectedException("Invalid number: " + value));
                     }
-                }).sum();
+                });
+
+        if (!negatives.isEmpty()) {
+            throw new NegativeNumbersException(negatives);
+        }
+
+        return numbers.stream().mapToInt(Integer::intValue).sum();
     }
 
 }

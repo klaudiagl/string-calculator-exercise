@@ -2,6 +2,7 @@ package com.example.stringcalculator;
 
 import com.example.stringcalculator.exceptions.CalculatorException;
 import com.example.stringcalculator.exceptions.DelimiterException;
+import com.example.stringcalculator.exceptions.NegativeNumbersException;
 import com.example.stringcalculator.exceptions.NumberExpectedException;
 import com.example.stringcalculator.service.StringCalculatorService;
 import org.junit.jupiter.api.BeforeEach;
@@ -115,6 +116,12 @@ public class StringCalculatorServiceTest {
         assertDelimiterException("//sep,\n1sep,2");
     }
 
+    @Test
+    void testAddNegativeNumberThrowsException() {
+        assertNegativeNumbersException("1,-2", "Negative number(s) not allowed: -2");
+        assertNegativeNumbersException("2,-4, -9", "Negative number(s) not allowed: -4, -9");
+    }
+
     private void assertDelimiterException(String input) {
         assertDelimiterException(input, "Custom delimiter cannot contain default delimiters: ',' or '\\n'");
     }
@@ -124,4 +131,11 @@ public class StringCalculatorServiceTest {
         assertTrue(exception instanceof DelimiterException);
         assertTrue(exception.getMessage().contains(expectedMessage));
     }
+
+    private void assertNegativeNumbersException(String input, String expectedMessage) {
+        Exception exception = assertThrows(CalculatorException.class, () -> calculatorService.add(input));
+        assertTrue(exception instanceof NegativeNumbersException);
+        assertTrue(exception.getMessage().contains(expectedMessage));
+    }
+
 }
