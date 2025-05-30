@@ -1,5 +1,7 @@
 package com.example.stringcalculator;
 
+import com.example.stringcalculator.exceptions.CalculatorException;
+import com.example.stringcalculator.exceptions.DelimiterException;
 import com.example.stringcalculator.exceptions.NumberExpectedException;
 import com.example.stringcalculator.service.StringCalculatorService;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,29 +20,29 @@ public class StringCalculatorServiceTest {
     }
 
     @Test
-    void testAddEmptyStringReturnsZero() {
+    void testAddEmptyStringReturnsZero() throws CalculatorException {
         assertEquals(0, calculatorService.add(""));
         assertEquals(0, calculatorService.add(null));
     }
 
     @Test
-    void testAddSingleNumberReturnsSameNumber() {
+    void testAddSingleNumberReturnsSameNumber() throws CalculatorException {
         assertEquals(1, calculatorService.add("1"));
     }
 
     @Test
-    void testAddTwoNumbersReturnsTheirSum() {
+    void testAddTwoNumbersReturnsTheirSum() throws CalculatorException {
         assertEquals(3, calculatorService.add("1,2"));
 
     }
 
     @Test
-    void testAddMultipleNumbersReturnsSum() {
+    void testAddMultipleNumbersReturnsSum() throws CalculatorException {
         assertEquals(12, calculatorService.add("1,2,4,5"));
     }
 
     @Test
-    void testThrowExceptionWhenInputContainsInvalidNumber() {
+    void testAddInputContainsInvalidNumberThrowsException() {
         Exception exception = assertThrows(Exception.class, () -> calculatorService.add("1,a,2"));
 
         if (exception instanceof NumberExpectedException) {
@@ -52,7 +54,7 @@ public class StringCalculatorServiceTest {
     }
 
     @Test
-    void testAddWithNewlinesAsSeparators() {
+    void testAddNumbersWithNewlineSeparatorReturnsSum() throws CalculatorException {
         assertEquals(6, calculatorService.add("1,2\n3"));
     }
 
@@ -66,6 +68,13 @@ public class StringCalculatorServiceTest {
             assertTrue(exception.getCause() instanceof NumberExpectedException);
             assertTrue(exception.getCause().getMessage().contains("Invalid number: empty number between separators"));
         }
+    }
+
+    @Test
+    void testAddInputEndsWithSeparatorThrowsException() {
+        Exception exception = assertThrows(CalculatorException.class, () -> calculatorService.add("1,2,"));
+        assertTrue(exception instanceof DelimiterException);
+        assertTrue(exception.getMessage().contains("Invalid input: cannot end with a separator"));
     }
 
 
